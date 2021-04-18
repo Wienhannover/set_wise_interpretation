@@ -18,8 +18,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-#from MQ2008_paired.utils_wei.pytorchtools import EarlyStopping
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--lamb', type=float)
@@ -32,8 +30,6 @@ parser.add_argument('--no_sample', type=int)
 args_in = parser.parse_args()
 
 activation_dict = {"relu": nn.ReLU(),"sigmoid": nn.Sigmoid(),"softmax": nn.Softmax(),"selu": nn.SELU()}
-
-
 
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
@@ -101,19 +97,11 @@ class Actor(nn.Module):
             layer_list.append(nn.Linear(h_dim, h_dim))
             layer_list.append(activation_dict[activation])
         layer_list.append(nn.Linear(h_dim, output_dim))
-        
-        #layer_embedding = layer_list
-        #self.linears_embedding = nn.Sequential(*layer_embedding)
-
         layer_list.append(activation_dict["sigmoid"])
         self.linears = nn.Sequential(*layer_list)
         
     def forward(self, x):
-        return self.linears(x)
-
-    #def embedding(self, x):
-        #return self.linears_embedding(x)
-        
+        return self.linears(x)     
 #Use selected feature as the input and predict labels    
 class Critic_RankNet(nn.Module):
     def __init__(self, inputs, hidden_size, outputs):
@@ -122,7 +110,7 @@ class Critic_RankNet(nn.Module):
             nn.Linear(inputs, hidden_size),
             #nn.Dropout(0.5),
             #nn.ReLU(inplace=True),
-            nn.LeakyReLU(0.2,  inplace=True),#inplace为True，将会改变输入的数据 ，否则不会改变原输入，只会产生新的输出
+            nn.LeakyReLU(0.2,  inplace=True),
             #nn.SELU(inplace=True),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(0.2,  inplace=True),
@@ -136,7 +124,7 @@ class Critic_RankNet(nn.Module):
     def forward(self, input_1, selection_1):
         
         input_1 = input_1 * selection_1
-        result_1 = self.model(input_1) #预测input_1得分
+        result_1 = self.model(input_1)
         
         return result_1
 
@@ -155,7 +143,7 @@ class Baseline_RankNet(nn.Module):
             nn.Linear(inputs, hidden_size),
             #nn.Dropout(0.5),
             #nn.ReLU(inplace=True),
-            nn.LeakyReLU(0.2,  inplace=True),#inplace为True，将会改变输入的数据 ，否则不会改变原输入，只会产生新的输出
+            nn.LeakyReLU(0.2,  inplace=True),
             #nn.SELU(inplace=True),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(0.2,  inplace=True),
@@ -168,7 +156,7 @@ class Baseline_RankNet(nn.Module):
 
     def forward(self, input_1):
         
-        result_1 = self.model(input_1) #预测input_1得分
+        result_1 = self.model(input_1) 
         return result_1
 
     def predict(self, input):
@@ -327,11 +315,7 @@ def pair_actor_loss(actor_output_1, actor_output_2, actor_output_3, selection_1,
 
 def train_model(actor_model, critic_model, baseline_model, patience, epoch_start_early_stopping, saved_path, epochs, lamda, margin):
         
-    #actor_optimizer = torch.optim.Adam(actor_model.parameters(),lr = 1e-5, weight_decay=1e-5)
     actor_optimizer = torch.optim.Adam(actor_model.parameters(),lr = 1e-6, weight_decay=1e-5)
-    #actor_optimizer = torch.optim.Adam(actor_model.parameters(),lr = 1e-7, weight_decay=1e-5)
-    #actor_optimizer = torch.optim.Adam(actor_model.parameters(),lr = 1e-8, weight_decay=1e-5)
-
     critic_optimizer = torch.optim.Adam(critic_model.parameters(),lr = 1e-4, weight_decay=1e-5)
     baseline_optimizer = torch.optim.Adam(baseline_model.parameters(),lr = 1e-4, weight_decay=1e-5)
     
