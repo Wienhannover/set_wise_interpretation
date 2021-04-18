@@ -18,8 +18,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-#from MQ2008_paired.utils_wei.pytorchtools import EarlyStopping
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--lamb', type=float)
@@ -28,13 +26,9 @@ parser.add_argument('--patience', type=int)
 parser.add_argument('--start_stop', type=int)
 parser.add_argument('--no_sample', type=int)
 #parser.add_argument('--w_n', type=int)
-
-
 args_in = parser.parse_args()
 
 activation_dict = {"relu": nn.ReLU(),"sigmoid": nn.Sigmoid(),"softmax": nn.Softmax(),"selu": nn.SELU()}
-
-
 
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
@@ -102,18 +96,11 @@ class Actor(nn.Module):
             layer_list.append(nn.Linear(h_dim, h_dim))
             layer_list.append(activation_dict[activation])
         layer_list.append(nn.Linear(h_dim, output_dim))
-        
-        #layer_embedding = layer_list
-        #self.linears_embedding = nn.Sequential(*layer_embedding)
-
         layer_list.append(activation_dict["sigmoid"])
         self.linears = nn.Sequential(*layer_list)
         
     def forward(self, x):
         return self.linears(x)
-
-    #def embedding(self, x):
-        #return self.linears_embedding(x)
         
 #Use selected feature as the input and predict labels    
 class Critic_RankNet(nn.Module):
@@ -123,7 +110,7 @@ class Critic_RankNet(nn.Module):
             nn.Linear(inputs, hidden_size),
             #nn.Dropout(0.5),
             #nn.ReLU(inplace=True),
-            nn.LeakyReLU(0.2,  inplace=True),#inplace为True，将会改变输入的数据 ，否则不会改变原输入，只会产生新的输出
+            nn.LeakyReLU(0.2,  inplace=True),
             #nn.SELU(inplace=True),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(0.2,  inplace=True),
@@ -137,12 +124,12 @@ class Critic_RankNet(nn.Module):
     def forward(self, input_1, selection_1, input_2, selection_2):
         
         input_1 = input_1 * selection_1
-        result_1 = self.model(input_1) #预测input_1得分
+        result_1 = self.model(input_1)
         
         input_2 = input_2 * selection_2
-        result_2 = self.model(input_2) #预测input_2得分
+        result_2 = self.model(input_2)
         
-        pred = self.sigmoid(result_1 - result_2) #input_1比input_2更相关概率
+        pred = self.sigmoid(result_1 - result_2)
         return pred
 
     def predict(self, input, selection):
@@ -160,7 +147,7 @@ class Baseline_RankNet(nn.Module):
             nn.Linear(inputs, hidden_size),
             #nn.Dropout(0.5),
             #nn.ReLU(inplace=True),
-            nn.LeakyReLU(0.2,  inplace=True),#inplace为True，将会改变输入的数据 ，否则不会改变原输入，只会产生新的输出
+            nn.LeakyReLU(0.2,  inplace=True),
             #nn.SELU(inplace=True),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(0.2,  inplace=True),
@@ -173,9 +160,9 @@ class Baseline_RankNet(nn.Module):
 
     def forward(self, input_1, input_2):
         
-        result_1 = self.model(input_1) #预测input_1得分
-        result_2 = self.model(input_2) #预测input_2得分
-        pred = self.sigmoid(result_1 - result_2) #input_1比input_2更相关概率
+        result_1 = self.model(input_1) 
+        result_2 = self.model(input_2) 
+        pred = self.sigmoid(result_1 - result_2) 
         return pred
 
     def predict(self, input):
@@ -189,10 +176,9 @@ class Dataset(data.Dataset):
                 
         x_y = self.group_data(data_path)
         
-        # (x0,x1) from same query; (x0/x1,x2) from different query
+        # (x0,x1) from same query; (x0/x1,x2) from different queries
         self.x0, self.y0, self.x1, self.y1, self.x2, self.y2 = self.generate_triple(x_y, num_triples)
         
-       
     def __getitem__(self, index):
         
         data1 = self.x0[index].float()
@@ -382,15 +368,10 @@ def pair_actor_loss(actor_output_1, actor_output_2, actor_output_3, selection_1,
     
     return loss_final, loss_part1, loss_part2, distance_0.mean(), distance_1.mean()
 
-# In[21]:
-print(torch.__version__)
 def loss_bce(input, target):
-
+    
     loss = -((target * torch.log(input+1e-8)) + (1-target) * torch.log(1-input+1e-8))
-
     return loss.mean()
-
-
 
 def train_model(actor_model, critic_model, baseline_model, patience, epoch_start_early_stopping, saved_path, epochs, lamda, margin):
         
@@ -537,10 +518,7 @@ def train_model(actor_model, critic_model, baseline_model, patience, epoch_start
                 vali_selection_2 = vali_actor_output_2.ge(0.5).type(torch.float)
                    
                 vali_actor_output_3 = actor_model(data3)
-
-
-
-                                                                          
+                                                
                 vali_critic_output_1 = critic_model.predict(data1, vali_selection_1)
                 vali_critic_output_2 = critic_model.predict(data2, vali_selection_2)
                                
