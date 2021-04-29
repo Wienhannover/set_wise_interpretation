@@ -19,6 +19,9 @@ python evaluate/2_Jaccard_select_0.5.py --data_path MQ2008 --feat_num 46 --model
 python evaluate/3_mq2008_ndcg_rank_original_label.py --data_path MQ2008 --feat_num 46 --model_path saved_model_name --ndcg_num 0 --ndcg_rank_num ndcg_cut_10
 ```
 
+# new idea
+the comparision between new idea and old idea can be found in new_idea.pdf. The code of new idea is in pairwise_invase_with_margin_loss_new_idea.
+
 
 
 
